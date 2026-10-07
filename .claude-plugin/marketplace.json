@@ -1,0 +1,14 @@
+{
+  "name": "claude-leer",
+  "owner": {
+    "name": "Paul Osinga"
+  },
+  "plugins": [
+    {
+      "name": "leer",
+      "source": "./",
+      "description": "Read Claude's responses aloud (edge-tts) with keyboard controls."
+    }
+  ],
+  "description": "Claude Code plugins by Paul Osinga."
+}

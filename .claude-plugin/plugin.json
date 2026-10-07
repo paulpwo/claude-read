@@ -1,0 +1,42 @@
+{
+  "name": "leer",
+  "version": "1.0.0",
+  "description": "Reads Claude's last response aloud: natural edge-tts voices (free, no API key) with an offline fallback to the OS voice, plus pause and stop buttons.",
+  "author": {
+    "name": "Paul Osinga"
+  },
+  "homepage": "https://github.com/paulpwo/claude-leer",
+  "license": "MIT",
+  "types": "./types/index.d.ts",
+  "userConfig": {
+    "engine": {
+      "type": "string",
+      "title": "Speech engine",
+      "description": "auto = edge-tts, falling back to the OS voice when offline or not installed. edge-tts = always edge-tts. system = always the OS voice (say on macOS, SAPI on Windows, espeak-ng on Linux).",
+      "default": "auto",
+      "options": [
+        "auto",
+        "edge-tts",
+        "system"
+      ]
+    },
+    "voice": {
+      "type": "string",
+      "title": "edge-tts voice",
+      "description": "Any voice from `edge-tts --list-voices`, e.g. es-CO-GonzaloNeural, es-VE-PaolaNeural, es-US-AlonsoNeural, en-US-AndrewNeural.",
+      "default": "es-CO-GonzaloNeural"
+    },
+    "systemVoice": {
+      "type": "string",
+      "title": "System voice",
+      "description": "OS voice for the fallback. Empty = the system default. macOS: `say -v '?'`; Windows: an installed SAPI voice name; Linux: `espeak-ng --voices`.",
+      "default": ""
+    },
+    "edgeTts": {
+      "type": "string",
+      "title": "edge-tts command",
+      "description": "Name or full path of the edge-tts executable.",
+      "default": "edge-tts"
+    }
+  }
+}
