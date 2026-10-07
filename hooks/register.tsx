@@ -161,7 +161,10 @@ async function togglePause($: Engine) {
 }
 
 export const register: Register = (on, options) => {
-  config = { ...config, ...((options ?? {}) as Options) }
+  // An option left blank in /config keeps its default instead of becoming "".
+  for (const [key, value] of Object.entries((options ?? {}) as Options)) {
+    if (typeof value === 'string' && value.trim() !== '') config = { ...config, [key]: value.trim() }
+  }
 
   on('session.start', async ($, e, next) => {
     const started = await next(e)

@@ -54,3 +54,21 @@ test('refuses empty text without synthesizing', async ($, on) => {
   expect(typeof (result as { deny?: string }).deny).toBe('string')
   expect(ran.some(argv => argv[0] === 'say' || argv[0] === 'edge-tts')).toBe(false)
 })
+
+test('a blank option keeps its default', { options: { edgeTts: '', voice: '  ' } }, async ($, on) => {
+  const ran: string[][] = []
+  on('process.run', ($, e) => {
+    ran.push([...e.argv])
+    return { value: { exitCode: 0, stdout: '', stderr: '' } } as never
+  })
+  on('fs.write', () => ({ value: undefined }) as never)
+  on('process.spawn', async function* () {
+    return { value: { code: 0, signal: null } } as never
+  })
+
+  await $.tool.call({ tool: 'mcp__read__speak', text: 'hola' } as never)
+
+  const edge = ran.find(argv => argv.includes('--write-media'))
+  expect(edge?.[0]).toBe('edge-tts')
+  expect(edge?.[2]).toBe('es-CO-GonzaloNeural')
+})

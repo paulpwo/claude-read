@@ -1,6 +1,6 @@
 {
   "name": "read",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Reads Claude's last response aloud: natural edge-tts voices (free, no API key) with an offline fallback to the OS voice, plus pause and stop buttons.",
   "author": {
     "name": "Paul Osinga"
@@ -29,13 +29,13 @@
     "systemVoice": {
       "type": "string",
       "title": "System voice",
-      "description": "OS voice for the fallback. Empty = the system default. macOS: `say -v '?'`; Windows: an installed SAPI voice name; Linux: `espeak-ng --voices`.",
+      "description": "Optional. Leave empty to use the system default voice. Used only when edge-tts is unavailable. macOS: `say -v '?'`; Windows: an installed SAPI voice name; Linux: `espeak-ng --voices`.",
       "default": ""
     },
     "edgeTts": {
       "type": "string",
       "title": "edge-tts command",
-      "description": "Name or full path of the edge-tts executable.",
+      "description": "Optional. Leave empty to use `edge-tts` from your PATH; set a full path only if it is installed elsewhere.",
       "default": "edge-tts"
     }
   }
