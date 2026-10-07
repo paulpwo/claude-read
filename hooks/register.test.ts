@@ -29,7 +29,7 @@ test('falls back to the OS voice when edge-tts fails, by argv, and plays the res
     return { value: { code: 0, signal: null } } as never
   })
 
-  const result = await $.tool.call({ tool: 'mcp__leer__speak', text: 'hola mundo', rate: '+25%' } as never)
+  const result = await $.tool.call({ tool: 'mcp__read__speak', text: 'hola mundo', rate: '+25%' } as never)
   // The player starts on a detached loop; let it reach its first pull.
   for (let i = 0; i < 50; i++) await Promise.resolve()
 
@@ -39,7 +39,7 @@ test('falls back to the OS voice when edge-tts fails, by argv, and plays the res
   expect(say?.includes('225')).toBe(true)
   expect(ran.findIndex(argv => argv[0] === 'edge-tts') < ran.findIndex(argv => argv[0] === 'say')).toBe(true)
   expect(spawned[0]?.[0]).toBe('afplay')
-  expect(spawned[0]?.[1]?.endsWith('claude-leer-audio.aiff')).toBe(true)
+  expect(spawned[0]?.[1]?.endsWith('claude-read-audio.aiff')).toBe(true)
 })
 
 test('refuses empty text without synthesizing', async ($, on) => {
@@ -49,7 +49,7 @@ test('refuses empty text without synthesizing', async ($, on) => {
     return { value: { exitCode: 0, stdout: 'Darwin\n', stderr: '' } } as never
   })
 
-  const result = await $.tool.call({ tool: 'mcp__leer__speak', text: '   ' } as never)
+  const result = await $.tool.call({ tool: 'mcp__read__speak', text: '   ' } as never)
 
   expect(typeof (result as { deny?: string }).deny).toBe('string')
   expect(ran.some(argv => argv[0] === 'say' || argv[0] === 'edge-tts')).toBe(false)

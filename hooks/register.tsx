@@ -17,14 +17,14 @@ const MAX_CHARS = 3000
 const BASE_WPM = 180
 
 
-const playback = atom({ plugin: 'leer', key: 'playback' } as const, 'idle' as Playback)
-const frame = atom({ plugin: 'leer', key: 'frame' } as const, 0)
+const playback = atom({ plugin: 'read', key: 'playback' } as const, 'idle' as Playback)
+const frame = atom({ plugin: 'read', key: 'frame' } as const, 0)
 
 const SPEAK_TOOL = {
   name: 'speak',
   description:
     "Speaks the given plain text aloud on the user's machine and returns once playback has started. " +
-    'Use only when the user asked to hear a response (the /leer command).',
+    'Use only when the user asked to hear a response (the /read command).',
   inputSchema: {
     type: 'object',
     properties: {
@@ -56,7 +56,7 @@ let animation: Timer | undefined
 let child: AsyncGenerator<unknown, unknown> | undefined
 
 const sep = () => (os === 'windows' ? '\\' : '/')
-const file = (name: string) => `${tmp}${sep()}claude-leer-${name}`
+const file = (name: string) => `${tmp}${sep()}claude-read-${name}`
 const script = (root: string, name: string) => `${root}${sep()}scripts${sep()}${name}`
 
 /** The engines to try, in order: `auto` falls back to the OS voice when edge-tts fails (offline, not installed). */
@@ -101,7 +101,7 @@ async function control($: Engine, cmd: 'play' | 'pause' | 'stop') {
     await $.fs.write(file('control.txt'), cmd).catch(() => undefined)
     return
   }
-  const pattern = 'claude-leer-audio'
+  const pattern = 'claude-read-audio'
   const run = (sig: string) => $.process.run(['pkill', sig, '-f', pattern]).catch(() => undefined)
   if (cmd === 'pause') await run('-STOP')
   if (cmd === 'play') await run('-CONT')
@@ -185,7 +185,7 @@ export const register: Register = (on, options) => {
     return started
   })
 
-  on('tool.call', { tool: 'mcp__leer__speak' }, async ($, e) => {
+  on('tool.call', { tool: 'mcp__read__speak' }, async ($, e) => {
     const input = e as unknown as { text?: unknown; rate?: unknown }
     const text = typeof input.text === 'string' ? input.text.trim().slice(0, MAX_CHARS) : ''
     if (text === '') return { deny: 'Nothing to read: `text` is empty.' }
@@ -213,11 +213,11 @@ export const register: Register = (on, options) => {
     if (failures.length === synthOrder(config.engine).length) {
       return { deny: `Speech synthesis failed. ${failures.join(' | ')}` }
     }
-    if (failures.length > 0) $.ui.toast('leer: edge-tts unavailable, using the system voice')
+    if (failures.length > 0) $.ui.toast('read: edge-tts unavailable, using the system voice')
 
     await startPlayer($)
     return { result: 'Reading aloud.' } as never
-  }).catch(() => ({ deny: 'The leer plugin failed to read this text aloud.' }))
+  }).catch(() => ({ deny: 'The read plugin failed to read this text aloud.' }))
 
   on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {
     const state = await read($, playback)

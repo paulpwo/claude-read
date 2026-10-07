@@ -1,11 +1,11 @@
 {
-  "name": "leer",
+  "name": "read",
   "version": "1.0.0",
   "description": "Reads Claude's last response aloud: natural edge-tts voices (free, no API key) with an offline fallback to the OS voice, plus pause and stop buttons.",
   "author": {
     "name": "Paul Osinga"
   },
-  "homepage": "https://github.com/paulpwo/claude-leer",
+  "homepage": "https://github.com/paulpwo/claude-read",
   "license": "MIT",
   "types": "./types/index.d.ts",
   "userConfig": {
