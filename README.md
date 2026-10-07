@@ -97,15 +97,15 @@ List all of them with `edge-tts --list-voices`.
 
 The code is short and commented:
 
-- `commands/read.md` is the prompt that turns `/read` arguments into clean text and a speed. Edit it to change the speed words or the cleaning rules.
-- `hooks/register.tsx` registers the `speak` tool, runs the synthesis, controls the player and draws the speaker band.
+- `hooks/register.tsx` registers `/read` and the `speak` tool. The tool's description holds the rules Claude follows (speed words, which part to read, cleaning for speech): edit it to change them.
+- It also runs the synthesis, controls the player and draws the speaker band.
 - `scripts/*.ps1` are the Windows synthesis and playback helpers.
 
 Run the tests with `claude plugin test .` and validate with `claude plugin validate .`.
 
 ## How it works
 
-1. `/read` asks Claude to clean its last answer for speech and call the plugin's `speak` tool with the text and the speed.
+1. `/read` sends Claude a short request. Claude cleans its last answer for speech and calls the plugin's `speak` tool with the text and the speed.
 2. The plugin runs edge-tts (or the system voice) directly, without a shell, and writes the audio to your temp folder.
 3. It plays the audio in the background and shows the band. The buttons act on that player. macOS and Linux pause with signals, and Windows uses a control file.
 

@@ -72,3 +72,24 @@ test('a blank option keeps its default', { options: { edgeTts: '', voice: '  ' }
   expect(edge?.[0]).toBe('edge-tts')
   expect(edge?.[2]).toBe('es-CO-GonzaloNeural')
 })
+
+test('/read submits a short prompt with its arguments', async ($, on) => {
+  const submitted: { text: string; context?: readonly string[] }[] = []
+  on('prompt.submit', ($, e) => {
+    submitted.push({ text: e.text, context: e.context })
+    return { text: e.text } as never
+  })
+
+  const toasts: string[] = []
+  on('clock.sleep', () => ({ value: undefined }) as never)
+  on('ui.toast', ($, e) => {
+    toasts.push(String((e as { text?: string }).text ?? JSON.stringify(e)))
+    return {} as never
+  })
+
+  await $.command.run({ command: 'read', args: 'más rápido' } as never)
+  for (let i = 0; i < 50; i++) await Promise.resolve()
+
+  expect(toasts).toEqual([])
+  expect(submitted[0]?.text).toBe('Read your previous response aloud: más rápido')
+})

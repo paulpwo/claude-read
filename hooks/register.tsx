@@ -16,15 +16,16 @@ const MAX_CHARS = 3000
 // Words per minute that `say` and espeak-ng read at a +0% rate.
 const BASE_WPM = 180
 
-
 const playback = atom({ plugin: 'read', key: 'playback' } as const, 'idle' as Playback)
 const frame = atom({ plugin: 'read', key: 'frame' } as const, 0)
 
+// The model reads these rules with the tool, so /read itself stays a short prompt.
 const SPEAK_TOOL = {
   name: 'speak',
-  description:
-    "Speaks the given plain text aloud on the user's machine and returns once playback has started. " +
-    'Use only when the user asked to hear a response (the /read command).',
+  description: `Speaks plain text aloud on the user's machine; returns once playback has started.
+Use it only when the user asks to hear a response read aloud (the /read command), and call it exactly once, with no commentary before or after.
+- Text: by default your previous response. If the request names a part ("the summary", "solo la conclusión"), only that part; words that only say "read" ("read this", "leer esto") mean the whole response. Clean it for speech: drop code blocks, file paths, URLs and markdown symbols; keep natural prose in the response's own language; at most 3000 characters, cut at a sentence boundary.
+- Rate: requests may be in any language. "faster"/"más rápido" → +25%, "much faster" → +50%, "slower"/"más lento" → -20%, "much slower" → -35%, an explicit percentage wins ("30% faster" → +30%); clamp to -50%..+100%; default "+0%".`,
   inputSchema: {
     type: 'object',
     properties: {
@@ -185,7 +186,24 @@ export const register: Register = (on, options) => {
     // State outlives reloads, but the player does not: start every load idle.
     await setPlayback($, 'idle')
     await $.tool.register(SPEAK_TOOL)
+    // Registered from code so it is plain /read; a commands/ file would be /read:read.
+    await $.command.register({
+      name: 'read',
+      description: "Read Claude's previous response aloud",
+      argumentHint: '[faster | slower | más rápido | 30% faster] [which part]',
+    })
     return started
+  })
+
+  // /read becomes a short prompt; the speak tool's description carries the rules.
+  on('command.run', { command: 'read' }, async ($, e) => {
+    const args = e.args.trim()
+    // A command.run hook may not submit while it holds the turn: submit right after.
+    void (async () => {
+      await $.clock.sleep(0)
+      await $.prompt.submit({ text: args ? `Read your previous response aloud: ${args}` : 'Read your previous response aloud.' })
+    })().catch((err: unknown) => $.ui.toast(`read: could not start the reading (${String(err)})`))
+    return {}
   })
 
   on('tool.call', { tool: 'mcp__read__speak' }, async ($, e) => {
