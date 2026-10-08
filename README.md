@@ -2,9 +2,15 @@
 
 `/read` reads Claude's previous response aloud while an animated speaker shows above the prompt.
 
+**Built on Claude Code mods.** This plugin exists thanks to [mods](https://code.claude.com/docs/en/plugins/mods/overview), Anthropic's technology for changing how Claude Code looks and behaves from inside it. Without mods, a plugin can't draw controls in Claude Code's own interface. The whole plugin is one mod, `hooks/register.tsx`, and it uses mods to:
+
+- draw the framed band above the prompt, with the animated speaker and the buttons (`ui.render` on `AbovePrompt`)
+- register `/read` as a command that runs plugin code, and the `speak` tool Claude calls (`$.command.register`, `$.tool.register`)
+- run the synthesis and the player itself when Claude calls the tool (`tool.call`, `$.process`)
+
 - **Natural voices, free.** It uses [edge-tts](https://github.com/rany2/edge-tts), the free Microsoft Edge read-aloud service: no API key, no account, no cost. Every locale works, including `es-CO`, `es-VE`, `es-US`, `es-MX`, `es-ES` and `en-US`.
 - **Offline fallback.** If edge-tts is missing or there is no internet connection, it uses your OS's own voice: `say` on macOS, SAPI on Windows, `espeak-ng` on Linux.
-- **One-click controls.** Buttons next to the speaker pause, resume and stop the reading.
+- **One-click controls.** A framed band above the prompt has buttons to pause, resume and stop the reading. `/read stop`, `/read pause` and `/read resume` do the same.
 - **Speed.** Say the speed in words: `/read faster`, `/read más lento`, `/read 30% faster`.
 - **Partial reading.** Name the part you want to hear: `/read only the conclusion`.
 
@@ -14,7 +20,7 @@
 
 | | macOS | Windows | Linux |
 | --- | --- | --- | --- |
-| Claude Code | terminal, recent version with plugin function hooks | same | same |
+| Claude Code | terminal, v2.1.287 or later (mods) | same | same |
 | Natural voices (recommended) | `pipx install edge-tts` | `pip install edge-tts` | `pipx install edge-tts` |
 | Player | `afplay` (built in) | PowerShell (built in) | `paplay` or `aplay`; `ffplay` (ffmpeg) for edge-tts audio |
 | Offline voice | `say` (built in) | SAPI (built in) | `espeak-ng` |
@@ -47,13 +53,22 @@ Type the instructions in any language: Claude interprets them by meaning.
 
 While it reads:
 
-| Button | Action |
+```
+╭──────────────────────────────────────╮
+│ 🔊 Reading aloud │ ⏸ Pause  ⏹ Stop   │
+╰──────────────────────────────────────╯
+```
+
+| Control | Action |
 | --- | --- |
 | 🔊 | stop |
-| ⏸ / ▶ | pause / resume |
-| ⏹ | stop |
+| ⏸ Pause / ▶ Resume | pause / resume |
+| ⏹ Stop | stop |
+| `/read stop` (`parar`, `detener`) | stop |
+| `/read pause` (`pausa`) | pause |
+| `/read resume` (`continue`, `reanudar`, `seguir`) | resume |
 
-Claude Code does not let plugins take over keys such as Esc, so the controls are buttons.
+The `/read stop`, `/read pause` and `/read resume` commands act at once, without a turn, even while Claude is working. Use them when the band is hidden: a Claude Code survey takes the band's place while it shows, and `ctrl+x ctrl+a` collapses it. Claude Code does not let plugins take over keys such as Esc, so the controls are buttons and commands.
 
 ## Configure
 
@@ -112,6 +127,7 @@ Run the tests with `claude plugin test .` and validate with `claude plugin valid
 ## Troubleshooting
 
 - **`/read` says synthesis failed.** Run `edge-tts --list-voices` to check the install and the network, or set `engine` to `system`.
+- **Audio plays but the band is missing.** A Claude Code survey holds the band while it shows, or the band was collapsed with `ctrl+x ctrl+a`. Use `/read pause` or `/read stop`.
 - **No sound on Linux.** Install `pulseaudio-utils` (paplay) or `alsa-utils` (aplay), plus `ffmpeg` for edge-tts audio.
 
 ## Platform status

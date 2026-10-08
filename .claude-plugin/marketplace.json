@@ -7,7 +7,7 @@
     {
       "name": "read",
       "source": "./",
-      "description": "Read Claude's responses aloud (edge-tts) with keyboard controls."
+      "description": "Read Claude's responses aloud (edge-tts) with on-screen pause and stop controls."
     }
   ],
   "description": "Claude Code plugins by Paul Osinga."
