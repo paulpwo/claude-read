@@ -2,6 +2,8 @@
 
 `/read` reads Claude's previous response aloud while an animated speaker shows above the prompt.
 
+![The reading band above the Claude Code prompt: an animated speaker, "Reading aloud", and Pause and Stop buttons](docs/band.png)
+
 **Built on Claude Code mods.** This plugin exists thanks to [mods](https://code.claude.com/docs/en/plugins/mods/overview), Anthropic's technology for changing how Claude Code looks and behaves from inside it. Without mods, a plugin can't draw controls in Claude Code's own interface. The whole plugin is one mod, `hooks/register.tsx`, and it uses mods to:
 
 - draw the framed band above the prompt, with the animated speaker and the buttons (`ui.render` on `AbovePrompt`)
