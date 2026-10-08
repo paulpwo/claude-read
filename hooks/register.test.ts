@@ -93,3 +93,37 @@ test('/read submits a short prompt with its arguments', async ($, on) => {
   expect(toasts).toEqual([])
   expect(submitted[0]?.text).toBe('Read your previous response aloud: más rápido')
 })
+
+test('/read stop and /read pause control the player without a turn', async ($, on) => {
+  const ran: string[][] = []
+  const submitted: string[] = []
+  on('process.run', ($, e) => {
+    ran.push([...e.argv])
+    return { value: { exitCode: 0, stdout: '', stderr: '' } } as never
+  })
+  on('fs.write', () => ({ value: undefined }) as never)
+  on('process.spawn', async function* () {
+    // A player that keeps playing until the test ends.
+    await new Promise(() => undefined)
+  })
+  on('prompt.submit', ($, e) => {
+    submitted.push(e.text)
+    return { text: e.text } as never
+  })
+  on('clock.sleep', () => ({ value: undefined }) as never)
+  on('clock.every', () => ({ value: { cancel: () => undefined } }) as never)
+
+  await $.tool.call({ tool: 'mcp__read__speak', text: 'hola' } as never)
+  for (let i = 0; i < 50; i++) await Promise.resolve()
+  // speak itself stops any earlier reading; count only what the commands do.
+  ran.length = 0
+
+  const paused = await $.command.run({ command: 'read', args: 'pausa' } as never)
+  expect(ran.some(argv => argv[0] === 'pkill' && argv[1] === '-STOP')).toBe(true)
+  expect(typeof (paused as { text?: string }).text).toBe('string')
+
+  await $.command.run({ command: 'read', args: ' STOP ' } as never)
+  for (let i = 0; i < 50; i++) await Promise.resolve()
+  expect(ran.some(argv => argv[0] === 'pkill' && argv[1] === '-TERM')).toBe(true)
+  expect(submitted).toEqual([])
+})

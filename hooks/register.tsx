@@ -13,6 +13,12 @@ const FRAMES = ['\u{1F508}', '\u{1F509}', '\u{1F50A}']
 const PAUSED = '\u23F8'
 const RATE = /^[+-]\d{1,3}%$/
 const MAX_CHARS = 3000
+// /read arguments the plugin handles itself, in English and Spanish.
+const LOCAL_ARGS = new Map<string, 'stop' | 'pause' | 'resume'>([
+  ['stop', 'stop'], ['parar', 'stop'], ['detener', 'stop'],
+  ['pause', 'pause'], ['pausa', 'pause'], ['pausar', 'pause'],
+  ['resume', 'resume'], ['continue', 'resume'], ['reanudar', 'resume'], ['continuar', 'resume'], ['seguir', 'resume'],
+])
 // Words per minute that `say` and espeak-ng read at a +0% rate.
 const BASE_WPM = 180
 
@@ -195,9 +201,22 @@ export const register: Register = (on, options) => {
     return started
   })
 
-  // /read becomes a short prompt; the speak tool's description carries the rules.
+  // /read stop|pause|resume act at once, without a turn: the way out when the band
+  // is hidden (a survey holds it, or the person collapsed it).
+  // Anything else becomes a short prompt; the speak tool's description carries the rules.
   on('command.run', { command: 'read' }, async ($, e) => {
     const args = e.args.trim()
+    const local = LOCAL_ARGS.get(args.toLowerCase())
+    if (local !== undefined) {
+      const state = await read($, playback)
+      if (state === 'idle') return { text: 'read: nothing is playing.' }
+      if (local === 'stop') {
+        await stop($)
+        return { text: 'read: stopped.' }
+      }
+      if ((local === 'pause') === (state === 'playing')) await togglePause($)
+      return { text: local === 'pause' ? 'read: paused. /read resume to continue.' : 'read: resumed.' }
+    }
     // A command.run hook may not submit while it holds the turn: submit right after.
     void (async () => {
       await $.clock.sleep(0)
@@ -248,19 +267,23 @@ export const register: Register = (on, options) => {
     }
 
     const { Box, Button, Text } = $.ui.resolve(e)
-    const glyph = state === 'paused' ? PAUSED : FRAMES[await read($, frame)]
+    const paused = state === 'paused'
+    const glyph = paused ? PAUSED : FRAMES[await read($, frame)]
+    // The border takes two rows; a band too short for it keeps the bare row.
+    const framed = (e.props.maxRows ?? 3) >= 3
 
     return (
-      <Box>
+      <Box
+        alignSelf="flex-start"
+        alignItems="center"
+        gap={1}
+        {...(framed ? { borderStyle: 'round', borderColor: 'claude', borderDimColor: paused, paddingX: 1 } : {})}
+      >
         <Button key="speaker" plain label={glyph} onPress={() => void stop($)} />
-        <Button
-          key="pause"
-          plain
-          label={state === 'paused' ? ' \u25B6 ' : ' \u23F8 '}
-          onPress={() => void togglePause($)}
-        />
-        <Button key="stop" plain label={' \u23F9 '} onPress={() => void stop($)} />
-        <Text dimColor>{state === 'paused' ? ' Paused' : ' Reading'}</Text>
+        <Text bold={!paused} dimColor={paused}>{paused ? 'Paused' : 'Reading aloud'}</Text>
+        <Text dimColor>{'\u2502'}</Text>
+        <Button key="pause" plain label={paused ? '\u25B6 Resume' : '\u23F8 Pause'} onPress={() => void togglePause($)} />
+        <Button key="stop" plain label={'\u23F9 Stop'} onPress={() => void stop($)} />
       </Box>
     )
   })
